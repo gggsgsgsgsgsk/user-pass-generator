@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Username and Password Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        label, input, select, button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generate Usernames and Passwords</h1>
+    <form id="generator-form">
+        <label for="count">Number of usernames and passwords to generate:</label>
+        <input type="number" id="count" name="count" min="1" max="1000000" required>
+        
+        <label for="username-length-mode">Username length mode:</label>
+        <select id="username-length-mode" name="username-length-mode" required>
+            <option value="fixed">Fixed</option>
+            <option value="random">Random</option>
+        </select>
+        
+        <label for="username-length">Length of usernames:</label>
+        <input type="number" id="username-length" name="username-length" min="5" max="20" required>
+        
+        <label for="username-length-min">Minimum length of usernames (if random):</label>
+        <input type="number" id="username-length-min" name="username-length-min" min="5" max="20" style="display:none;">
+        
+        <label for="username-length-max">Maximum length of usernames (if random):</label>
+        <input type="number" id="username-length-max" name="username-length-max" min="5" max="20" style="display:none;">
+        
+        <label for="password-length-mode">Password length mode:</label>
+        <select id="password-length-mode" name="password-length-mode" required>
+            <option value="fixed">Fixed</option>
+            <option value="random">Random</option>
+        </select>
+        
+        <label for="password-length">Length of passwords:</label>
+        <input type="number" id="password-length" name="password-length" min="8" max="20" required>
+        
+        <label for="password-length-min">Minimum length of passwords (if random):</label>
+        <input type="number" id="password-length-min" name="password-length-min" min="8" max="20" style="display:none;">
+        
+        <label for="password-length-max">Maximum length of passwords (if random):</label>
+        <input type="number" id="password-length-max" name="password-length-max" min="8" max="20" style="display:none;">
+        
+        <button type="submit">Generate</button>
+    </form>
+    <script>
+        const words = [
+            "apple", "banana", "cherry", "date", "elderberry", "fig", "grape", "honeydew",
+            "kiwi", "lemon", "mango", "nectarine", "orange", "papaya", "quince", "raspberry",
+            "strawberry", "tangerine", "ugli", "vanilla", "watermelon", "xigua", "yam", "zucchini",
+            "apricot", "blackberry", "blueberry", "cantaloupe", "coconut", "cranberry", "dragonfruit",
+            "gooseberry", "guava", "lychee", "mulberry", "olive", "passionfruit", "peach", "pear",
+            "pineapple", "plum", "pomegranate", "rhubarb", "starfruit", "tomato", "asparagus",
+            "broccoli", "carrot", "cauliflower", "celery", "corn", "cucumber", "eggplant",
+            "garlic", "kale", "lettuce", "mushroom", "onion", "pepper", "potato", "pumpkin",
+            "radish", "spinach", "squash", "turnip", "zucchini", "bread", "butter", "cheese",
+            "egg", "ham", "jam", "milk", "pasta", "rice", "soup", "tofu", "yogurt", "biscuit",
+            "cake", "candy", "chocolate", "cookie", "doughnut", "honey", "icecream", "jelly",
+            "muffin", "pie", "pudding", "syrup", "waffle", "almond", "brazilnut", "cashew",
+            "hazelnut", "macadamia", "pecan", "pistachio", "walnut", "beef", "chicken", "duck",
+            "lamb", "pork", "salmon", "sausage", "shrimp", "steak", "tuna", "turkey", "anchovy",
+            "crab", "lobster", "mackerel", "oyster", "sardine", "scallop", "squid", "anchovy",
+            "bass", "clams", "cod", "flounder", "grouper", "haddock", "halibut", "herring",
+            "mahimahi", "octopus", "redsnapper", "shark", "snapper", "swordfish", "tilapia",
+            "trout", "turbot", "bluecheese", "brie", "camembert", "cheddar", "feta", "gouda",
+            "mozzarella", "parmesan", "provolone", "roquefort", "swiss", "emmental", "fontina",
+            "gruyere", "havarti", "jarlsberg", "limburger", "mascarpone", "monterey", "munster",
+            "ricotta", "romano", "stilton", "buttermilk", "cream", "halfandhalf", "whippedcream",
+            "clottedcream", "sourcream", "yogurt", "kefir", "quark", "custard", "curd", "paneer",
+            "burrata", "halloumi", "manchego", "queso", "ricotta", "marscapone", "ravioli",
+            "spaghetti", "tortellini", "penne", "linguine", "fettuccine", "farfalle", "fusilli",
+            "macaroni", "rigatoni", "orzo", "lasagna", "gnocchi", "tagliatelle", "cannelloni",
+            "capellini", "pappardelle", "vermicelli", "udon", "soba", "ramen", "pho", "loMein",
+            "meifun", "spatzle", "glassnoodles", "cellophane", "beanthread", "miso", "tofu",
+            "tempeh", "seitan", "soybeans", "edamame", "sushi", "sashimi", "nigiri", "maki",
+            "uramaki", "temaki", "unagi", "tobiko", "masago", "ikura", "caviar", "roe", "smelt",
+            "dill", "basil", "oregano", "thyme", "rosemary", "parsley", "cilantro", "mint",
+            "sage", "tarragon", "chive", "lemongrass", "marjoram", "bayleaf", "paprika", "chili",
+            "cayenne", "cinnamon", "clove", "coriander", "cumin", "fennel",   "mustard",
+            "nutmeg", "saffron", "turmeric", "vanilla", "wasabi", "horseradish", "chocolatechip",
+            "mintchip", "peanutbutter", "cookiedough", "rockyroad", "cherrygarcia", "halvah",
+            "tahini", "hummus", "falafel", "shawarma", "gyro", "tabbouleh", "moussaka", "baba",
+            "ghanoush", "baklava", "kunafa", "luqaimat", "qatayef", "gulaab", "jamun", "jalebi",
+            "kheer", "halwa", "gulabjamun", "kachori", "kachumber", "ladoo", "murukku",
+            "pappadum", "samosa", "pakora", "bhaji", "chaat", "idli", "dosa", "uttapam",
+            "vadapav", "pavbhaji", "biryani", "pulao", "tikka", "korma", "saag", "paneer",
+            "butterchicken", "vindaloo", "roganjosh", "kebabs", "shawarma", "pita", "tzatziki",
+            "feta", "olives", "dolma", "kibbeh", "labneh", "mujaddara", "tabbouleh", "fattoush",
+            "meze", "mezze", "kofta", "tahdig", "persian", "kashk", "ash", "sabzi", "polo",
+            "tahchin", "jeweledrice", "khoresht", "ghormeh", "sabzi", "kabab", "joojeh", "shishlik",
+            "koobideh", "ashpaz", "mashhadi", "isfahan", "tabriz", "shiraz", "esfahan", "baghali",
+            "polo", "zereshk", "lavash", "sangak", "barbari", "taftan", "naan", "baklava",
+            "turkishdelight", "lokum", "kadayif", "tavuk", "gogsu", "ricepudding", "mahalabia",
+            "muhallabieh", "atoll", "bananaleaf", "cornhusks", "leaf", "taro", "cassava", "yam",
+            "plantain", "breadfruit", "jackfruit", "durian", "soursop", "custardapple", "starapple",
+            "tamarind", "ackee", "breadnut", "mamey", "sapote", "canistel", "pawpaw", "sugarapple",
+            "cherimoya", "atemoya", "biriba", "maracuja", "lilikoi", "lilikoi", "pitanga",
+            "jabuticaba", "cupuaçu", "camucamu", "feijoa", "guavaberry", "miraclefruit", "quararibea",
+            "sapodilla", "acai", "acerola", "ambarella", "graviola", "guanabana", "langsat",
+            "longan", "mangosteen", "mamoncillo", "naranjilla", "rambutan", "tamarillo",
+            "ugu", "ndole", "bitacola", "egusi", "iroko", "maize", "yam", "plantain", "cassava",
+            "ugwu", "utazi", "bitterleaf", "afang", "edikang", "ikong", "okazi", "uziza",
+            "akpu", "fufu", "suya", "kilishi", "masa", "tuwo", "shinkafa", "garri", "eba",
+            "semovita", "amala", "iyan", "egusi", "ogbono", "banga", "oxtail", "pepper", "soup",
+            "jollof", "rice", "fried", "rice", "moimoi", "akara", "ekuru", "gizdodo", "asaro",
+            "efo", "riro", "ofada", "rice", "ekpang", "nkukwo", "african", "salad", "ugba",
+            "ukodo", "peppersoup", "isi", "ewu", "nkwobi", "abacha", "ugba", "onugbu", "ohia",
+            "okoho", "beans", "akidi", "cowpea", "kunu", "zaki", "tigernut", "milk", "soy",
+            "kunu", "aya", "fura", "nunu", "zobo", "karkade", "gingerbeer", "sobolo", "palmwine",
+            "burukutu", "kunu", "tribal", "wine", "coffee", "cascarilla", "tea", "hibiscus",
+            "rooibos", "mate", "horchata", "atole", "chocolate", "champurrado", "tamarindo",
+            "hibiscus", "orchata", "rum", "pisco", "sours", "caipirinha", "batida", "mojito",
+            "daiquiri", "pina", "colada", "margarita", "tequila", "paloma", "agua", "fresca",
+            "horchata", "licuado", "ponche", "rompope", "coquito", "eggnog", "sorrel", "gingerbeer",
+            "softdrink", "pop", "soda", "lemonade", "limeade", "icedtea", "rootbeer", "grapefruit",
+            "juice", "cranberry", "juice", "grape", "juice", "apple", "juice", "orange", "juice",
+            "tangerine", "juice", "tamarind", "juice", "carrot", "juice", "beet", "juice",
+              "juice", "vegetable", "juice", "smoothie", "milkshake", "malts", "eggcream",
+            "frappe", "float", "milk", "almondmilk", "soymilk", "ricemilk", "hempmilk",
+            "coconutmilk", "oatmilk", "flaxmilk", "sesamemilk", "tigernutmilk", "milk", "chocolatemilk",
+            "strawberrymilk", "vanillamilk", "latte", "cappuccino", "mocha", "macchiato",
+            "espresso", "americano", "cortado", "doppio", "ristretto", "conpanna", "affogato",
+            "breve", "flatwhite", "melange", "cafe", "au", "lait", "caramelmacchiato",
+            "peppermintmocha", "chai", "latte", "matcha", "latte", "turmeric", "latte", "rose",
+            "latte", "lavender", "latte", "redvelvet", "latte", "beetroot", "latte", "goldenmilk",
+            "moonmilk", "chocolate", "milk", "milkshake", "smoothie", "proteinshake",
+            "mealreplacement", "nutmilk", "horchata", "ajonjolí", "almondmilk", "soymilk",
+            "ricemilk", "coconutmilk", "hempmilk", "tigernutmilk", "kefir", "lassi", "buttermilk",
+            "egg", "nog", "kombucha", "jun", "tepache", "switchel", "shrub", "sparkling",
+            "water", "mineral", "water", "seltzer", "water", "tonic", "water", "club", "soda",
+            "gingerale", "cola", "cream", "soda", "root", "beer", "birch", "beer", "butterscotch",
+            "beer", "sarsaparilla", "beer", "gingerbeer", "lemondrop", "shandy", "beer", "radler",
+            "buck", "highball", "rickey", "sling", "fizz", "collins", "daisy", "fix", "flip",
+            "julep", "smash", "sour", "swizzle", "sangria", "spritz", "spritzer", "punch",
+            "shrub", "fizz", "collins", "pisco", "sours", "whiskey", "sours", "gin", "sours",
+            "rum", "sours", "tequila", "sours", "vodka", "sours", "lime", "juice", "lemon",
+            "juice", "orange", "juice", "grapefruit", "juice", "pineapple", "juice", "cranberry",
+            "juice", "pomegranate", "juice", "carrot", "juice", "tomato", "juice", "vegetable",
+            "juice", "celery", "juice", "beet", "juice",   "juice", "wheatgrass",
+            "juice", "lemonade", "limeade", "lime", "soda", "gingerbeer", "gingerale", "cola",
+            "rootbeer", "cream", "soda", "tonic", "water", "seltzer", "water", "club", "soda",
+            "sparkling", "water", "mineral", "water", "campari", "negroni", "aperol", "spritz",
+            "americano", "negroni", "sbagliato", "boulevardier", "manhattan", "oldfashioned",
+            "martini", "daiquiri", "margarita", "cosmopolitan", "gimlet", "pimms", "cup",
+            "hugo", "bramble", "tom", "collins", "sidecar", "french", "75", "caipirinha",
+            "mojito", "mintjulep", "whiskey", "sour", "pisco", "sour", "paloma", "tequila",
+            "sunrise", "tequila", "sunset", "mezcal", "rita", "mezcal", "mule", "dark", "and",
+            "stormy", "rum", "swizzle", "pina", "colada", "mai", "tai", "zombie", "hurricane",
+            "planters", "punch", "bahama", "mama", "scorpion", "swizzle", "fogcutter", "navyswig",
+            "painkiller", "knockback", "grog", "cornnolie", "norrainie", "deadmansvengeance",
+            "blackstrap", "bridalshower", "tropicallove", "fireandsmoke", "dragonfly",
+            "vulcanmindprobe", "flamingheart", "madmen", "therocks", "queenspark", "swizzle",
+            "gunclub", "swizzle", "mangotango", "pineappleexpress", "tamarindfizz", "guava",
+            "quench", "passionfruit", "margarita", "tropicalsunrise", "lychee", "cooler",
+            "papayapassion", "mangopapaya", "watermelon", "slush", "peachmango", "nectar",
+            "brazilian", "mojito", "pineapplecoconut", "caribbeansunset", "hawaiian",
+            "sunset", "polynesian", "paradise", "pineapplemint", "gingerpear", "cranapple",
+            "pear",   "lemon", "raspberry", "lemonginger", "lemongrass",  
+            "turmeric", , "lemon", "watermelon", "ginger"  "passionfruit",  
+            "mint",   "peach",   "orange",   "grapefruit",  
+            "blueberry",   "apple",   "mango",   "pineapple",  
+            "lychee",   "lime",   "raspberry",   "mint",  
+            "lemon",   "grapefruit",   "cherry",   "cranberry",
+            , "lime", "pomegranate",
+        ];
+        const specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+        function getRandomElement(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateUsername(length) {
+            let username = '';
+            while (username.length < length) {
+                const word = getRandomElement(words);
+                if (username.length + word.length <= length) {
+                    username += word;
+                } else {
+                    username += word.substring(0, length - username.length);
+                }
+            }
+            return username;
+        }
+
+        function generatePassword(length) {
+            let password = '';
+            while (password.length < length) {
+                const word = getRandomElement(words);
+                if (password.length + word.length <= length - 2) { // Leave space for special char and number
+                    password += word;
+                } else {
+                    password += word.substring(0, length - 2 - password.length);
+                }
+            }
+            const specialChar = getRandomElement(specialChars);
+            const number = Math.floor(Math.random() * 10);
+            password += specialChar + number;
+            return password;
+        }
+
+        function toggleVisibility(elementId, show) {
+            document.getElementById(elementId).style.display = show ? 'block' : 'none';
+        }
+
+        document.getElementById('username-length-mode').addEventListener('change', function() {
+            const isRandom = this.value === 'random';
+            toggleVisibility('username-length', !isRandom);
+            toggleVisibility('username-length-min', isRandom);
+            toggleVisibility('username-length-max', isRandom);
+        });
+
+        document.getElementById('password-length-mode').addEventListener('change', function() {
+            const isRandom = this.value === 'random';
+            toggleVisibility('password-length', !isRandom);
+            toggleVisibility('password-length-min', isRandom);
+            toggleVisibility('password-length-max', isRandom);
+        });
+
+        document.getElementById('generator-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const count = parseInt(document.getElementById('count').value);
+            const usernameLengthMode = document.getElementById('username-length-mode').value;
+            const passwordLengthMode = document.getElementById('password-length-mode').value;
+
+            let usernameLength, usernameLengthMin, usernameLengthMax;
+            let passwordLength, passwordLengthMin, passwordLengthMax;
+
+            if (usernameLengthMode === 'fixed') {
+                usernameLength = parseInt(document.getElementById('username-length').value);
+            } else {
+                usernameLengthMin = parseInt(document.getElementById('username-length-min').value);
+                usernameLengthMax = parseInt(document.getElementById('username-length-max').value);
+            }
+
+            if (passwordLengthMode === 'fixed') {
+                passwordLength = parseInt(document.getElementById('password-length').value);
+            } else {
+                passwordLengthMin = parseInt(document.getElementById('password-length-min').value);
+                passwordLengthMax = parseInt(document.getElementById('password-length-max').value);
+            }
+            
+            if (count > 1000000) {
+                alert("Count exceeds limit of 1,000,000");
+                return;
+            }
+
+            let content = '';
+            for (let i = 0; i < count; i++) {
+                const currentUsernameLength = usernameLengthMode === 'fixed' ? usernameLength : getRandomInt(usernameLengthMin, usernameLengthMax);
+                const currentPasswordLength = passwordLengthMode === 'fixed' ? passwordLength : getRandomInt(passwordLengthMin, passwordLengthMax);
+
+                const username = generateUsername(currentUsernameLength);
+                const password = generatePassword(currentPasswordLength);
+                content += `${username}:${password}\n`;
+            }
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'usernames_passwords.txt';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
